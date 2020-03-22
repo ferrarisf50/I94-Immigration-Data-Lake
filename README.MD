@@ -170,7 +170,7 @@ Here is the steps necessary to pipeline the data into the star schema
 
 - Python is being used in every step, because Python has powerful open source packages, which enable data analysis and manipulation, as well as a complete API access to various platforms, such as Spark, AWS, Linux. 
 
-- The ETL process will be run on Amazon EMR, a clouded based cluster that has Hadoop/Spark pre-installed, can be easily running the analysis script without worrying the cluster's configuration. Also, a better connection performance with its own storage product S3 where we store the raw data.
+- The ETL process will be run on Amazon EMR, a clouded based cluster that has Hadoop/Spark pre-installed, can be easily running the analysis script without worrying the cluster's configuration. Also, EMR cluster is easily scalable if the data size increases. I expect that EMR has better connection performance with its own storage product S3 where we store both raw data and result.
 
 
 
