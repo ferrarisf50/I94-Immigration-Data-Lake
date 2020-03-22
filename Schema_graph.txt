@@ -1,0 +1,70 @@
+
+Table i94  {
+  id varchar [pk]
+  year int [not null]
+  month int [not null]
+  day int [not null]
+  citizen_code int
+  resident_code int
+  port_code varchar
+  arrival_date timestamp [not null]
+  mode_code int
+  address_state varchar
+  departure_date timestamp
+  age int
+  visa_code int
+  birth_year int
+  gender varchar
+  airline_code varchar
+  admin_number int
+  visa_type varchar
+}
+
+Table airlines {
+  iata_code varchar [pk]
+  airline_name varchar
+  airline_country varchar
+  }
+
+Table ports {
+  port_code varchar [pk]
+  city varchar
+  state varchar
+ }
+ 
+Table modes {
+  mode_code int [pk]
+  mode varchar
+ } 
+ 
+Table countries {
+  country_code int [pk]
+  country varchar
+ }
+ 
+Table states {
+  address_state varchar [pk]
+  state varchar
+}
+
+Table visas {
+  visa_code int [pk]
+  visa varchar
+}
+
+
+
+
+// table relaionship 
+// > many-to-one; < one-to-many; - one-to-one
+
+Ref: modes.mode_code < i94.mode_code  
+Ref: countries.country_code < i94.citizen_code
+Ref: countries.country_code < i94.resident_code
+Ref: states.address_state < i94.address_state
+Ref: visas.visa_code < i94.visa_code
+Ref: ports.port_code < i94.port_code
+Ref: airlines.iata_code < i94.airline_code
+
+
+//----------------------------------------------//
