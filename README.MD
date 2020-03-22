@@ -93,7 +93,7 @@ Six dimension tables including airlines, ports, modes, countries, states, visas
 
 These irrelevant variables will be dropped from the airlines dataset:
 
-3-DigitCode, ICAODesignator: other code information I don't need.
+3-DigitCode, ICAODesignator: they are other airline code information that I don't need.
 
 #### ports     (Extracted from i94port dataset)
 
@@ -143,7 +143,7 @@ These irrelevant variables will be dropped from the airlines dataset:
 
 Here is the steps necessary to pipeline the data into the star schema
 
-1. Run output_format.sas on SAS, generate FMTOUT.csv. If you don't have SAS, don't worry. I have already created an FMTOUT.csv for you.
+1. Run output_format.sas on SAS, generate FMTOUT.csv. If you don't have SAS, no worry, I have already created an FMTOUT.csv for you.
 
 2. Run split_fmtout.py. The program will split FMTOUT.csv into multiple i94 code CSVs, also clean these CSVs as well.
 
@@ -155,7 +155,7 @@ Here is the steps necessary to pipeline the data into the star schema
 
 `python upload_to_s3.py`
 
-5. Run deploy_emr.py. The ETL pipeline will be processed. Go to your EMR cluster page, to verify the output.
+5. Run deploy_emr.py. The ETL pipeline will be processed. Go to your EMR cluster page, to keep track on the cluster's log, and verify the output.
 
 `python deploy_emr.py`
 
@@ -176,7 +176,7 @@ Here is the steps necessary to pipeline the data into the star schema
 
 ###  Propose how often the data should be updated and why.
 
-- The date comes monthly in SAS format, hence updated the data monthly is definitely possible. In fact, the data processing ETL on the cloud just takes a few minutes to be finished. 
+- Assumed the data is being collected monthly in SAS format, hence it's reasonable to update the data monthly. In fact, the data processing ETL on the cloud just takes a few minutes to be finished.  
 
 
 ### Write a description of how you would approach the problem differently under the following scenarios:
@@ -184,7 +184,7 @@ Here is the steps necessary to pipeline the data into the star schema
 
 #### The data was increased by 100x.
  
-- This can refer to a scenario that we need to process 10 years of I94 Immigration data. As Spark can be used on massive parallel processing, as long as we increase the number of nodes by hiring more machines when deploying to EMR. Currently I use 4 notes on EMR, if I increase the note number to 40, the performance will increase likely 10x.  
+- This refer to a scenario that we need to process 10 years of I94 Immigration data. As Spark can be used on massive parallel processing, as long as we increase the number of nodes by hiring more machines when deploying to EMR, this problem will be resolved. Currently I use 4 notes on EMR, if I increase the note number to 40, the performance will increase likely 10x.  
  
 #### The data populates a dashboard that must be updated on a daily basis by 7am every day.
  
@@ -192,4 +192,4 @@ Here is the steps necessary to pipeline the data into the star schema
  
 #### The database needed to be accessed by 100+ people.
  
-- Assumed these people just make a query to the S3 occasionally, then we can consider using Amazon Athena. It provides SQL query to the S3 data. Athena API has a limit number of calls varying from 5 to 100 per second depended on the API name being called, can burst up to 10 to 200 calls per second. I think it's reasonable for the capacity of a hundred users.  
+- Assumed these people just make a query to the S3 occasionally, then we can consider using Amazon Athena. It allows users to perform SQL query on the S3 data. Athena API has a limit number of calls varying from 5 to 100 per second depended on the API name being called, can burst up to 10 to 200 calls per second. I think it's reasonable for the capacity of a hundred users.  
