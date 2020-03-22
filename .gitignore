@@ -1,0 +1,7 @@
+__pycache__
+.DS_Store
+.ipynb_checkpoints/*
+metastore_db/*
+data/*
+sas_data/*
+dl.cfg
