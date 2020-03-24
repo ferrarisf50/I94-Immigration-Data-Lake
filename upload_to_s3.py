@@ -1,6 +1,7 @@
 import boto3
 import configparser
-
+import glob
+import os
 
 #config.read(r'/home/hadoop/dl.cfg')
 
@@ -22,13 +23,13 @@ def upload_to_s3(filename, s3_filename,s3,bucket):
     
     '''
     
-    print("Upload %s begins..." % S3_filename)
+    print("Upload %s begins..." % s3_filename)
     
     s3.upload_file(Filename=filename,
               Bucket=bucket,
               Key=s3_filename)
     
-    print("Upload %s completed." % S3_filename)
+    print("Upload %s completed." % s3_filename)
     
 def main():
     config = configparser.ConfigParser()
@@ -51,8 +52,13 @@ def main():
         upload_to_s3(file,'i94/data/'+file,s3,bucket)
      
     ### upload i94 immigration dataset ###
-    upload_to_s3('../../data/18-83510-I94-Data-2016/i94_apr16_sub.sas7bdat', \
-                 'i94/data/i94_apr16_sub.sas7bdat',  \
+    all_files = glob.glob(filepath + "/*.sas7bdat")
+
+    
+
+    for filename in all_files:
+        upload_to_s3(filename, \
+                 'i94/data/'+os.path.basename(filename),  \
                  s3,          \
                  bucket)
     

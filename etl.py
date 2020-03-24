@@ -7,9 +7,9 @@ from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, dat
 from datetime import datetime, timedelta
 import numpy as np
 import re
-
-
-
+from functools import reduce
+from pyspark.sql import DataFrame
+import glob
 
 def create_spark_session():
     """
@@ -40,14 +40,13 @@ def create_spark_session():
 
 
 
-def process_i94_data(spark, filepath, filename,outpath):
+def process_i94_data(spark, filepath, outpath):
     """
     Process the i94 immigration dataset, load into Spark, transform the data, run quality check, then write to parquet file.
     
     INPUT: 
     spark - Spark session
     filepath - the directory where the file locate 
-    filename - the source file name
     outpath - the directory where the output parquet file locate
     
     OUTPUT:
@@ -57,12 +56,25 @@ def process_i94_data(spark, filepath, filename,outpath):
     
     
     
-    
    
     print("Reading i94 immigration data...")
     
+    all_files = glob.glob(filepath + "/*.sas7bdat")
+
+    li = []
+
+    for filename in all_files:
+        df = spark.read.format('com.github.saurfang.sas.spark').load(filename)
+        if len(df.columns) == 34:
+            i94_jun = reduce(DataFrame.drop,['validres','delete_days','delete_mexl','delete_dup','delete_visa','delete_recdup'], df)    
+            li.append(i94_jun)
+        else:
+        #print(df.printSchema())
+            li.append(df)
+            
+    i94 = reduce(DataFrame.unionAll, li)
     
-    i94 = spark.read.format('com.github.saurfang.sas.spark').load(filepath+filename)
+    #i94 = spark.read.format('com.github.saurfang.sas.spark').load(filepath+filename)
     
     print("i94 immigration data has %s obs." % i94.count())
     
@@ -99,9 +111,9 @@ def process_i94_data(spark, filepath, filename,outpath):
       from i94_view
       
     """    
-     
+      #+"TABLESAMPLE (.001 PERCENT)"
     )  
-     #+"TABLESAMPLE (.001 PERCENT)"
+     
         
         
     ####### validate the arrival date distribution    ###############
@@ -282,17 +294,17 @@ def main():
     config = configparser.ConfigParser()
     
     
-    
-    
     '''
+    
+  
     config.read(r'dl.cfg')
     
     dim_filepath = "./"
     i94_filepath = "../../data/18-83510-I94-Data-2016/"
-    i94_filename ="i94_apr16_sub.sas7bdat"
+    #i94_filename ="i94_apr16_sub.sas7bdat"
     
     outpath = "data/"
-    '''
+       '''
     
     config.read(r'/home/hadoop/dl.cfg')
     
@@ -303,16 +315,18 @@ def main():
     
     dim_filepath = "s3a://"+bucket+"/i94/data/"
     i94_filepath = "s3a://"+bucket+"/i94/data/"
-    i94_filename ="i94_apr16_sub.sas7bdat"
+    #i94_filename ="i94_apr16_sub.sas7bdat"
     
     outpath = "s3a://"+bucket+"/i94/parquets/"
     
     
     spark = create_spark_session()
     
-    
-    process_i94_data(spark, i94_filepath, i94_filename,outpath)
-    process_dimension_data(spark, dim_filepath, outpath)
+
+    process_i94_data(spark, i94_filepath, outpath)
+
+
+    #process_dimension_data(spark, dim_filepath, outpath)
       
     print("All set!")
 
