@@ -43,7 +43,7 @@ def main():
     
     
     
-    
+    """
    
     ### upload dimension tables  ####
     file_lists =['i94addr.csv','i94port.csv','i94cit_res.csv','i94mode.csv','i94visa.csv','iata_airlines.csv']
@@ -52,24 +52,25 @@ def main():
         upload_to_s3(file,'i94/data/'+file,s3,bucket)
      
     ### upload i94 immigration dataset ###
-    all_files = glob.glob(filepath + "/*.sas7bdat")
+    all_files = glob.glob("../../data/18-83510-I94-Data-2016/*.sas7bdat")
 
     
-
+    
     for filename in all_files:
         upload_to_s3(filename, \
                  'i94/data/'+os.path.basename(filename),  \
                  s3,          \
                  bucket)
+    """
     
     ### upload etl.py and configuration file ###
     upload_to_s3('etl.py', \
-                 'i94/etl.py',  \
+                 'i94/scr/etl.py',  \
                  s3,          \
                  bucket)
     
     upload_to_s3('dl.cfg', \
-                 'i94/dl.cfg',  \
+                 'i94/scr/dl.cfg',  \
                  s3,          \
                  bucket)
     

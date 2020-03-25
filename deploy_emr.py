@@ -10,7 +10,7 @@ import configparser
 def deploy_to_emr(bucket, emr):
     
     cluster_id = emr.run_job_flow(
-    Name='test_emr_job_boto3',
+    Name='2016_i94_full_data',
     LogUri='s3://'+bucket+'/logs',
     ReleaseLabel='emr-5.29.0',
     Applications=[
@@ -39,14 +39,20 @@ def deploy_to_emr(bucket, emr):
                 'InstanceRole': 'MASTER',
                 'InstanceType': 'm5.xlarge',
                 'InstanceCount': 1,
+
+               
             },
             {
                 'Name': "Slave nodes",
                 'Market': 'ON_DEMAND',
                 'InstanceRole': 'CORE',
                 'InstanceType': 'm5.xlarge',
-                'InstanceCount': 4,
+                'InstanceCount': 4
+               
+                
+                
             }
+            
         ],
         #'Ec2KeyName': 'mykey',
         'KeepJobFlowAliveWhenNoSteps': False,
@@ -69,7 +75,7 @@ def deploy_to_emr(bucket, emr):
                 'HadoopJarStep': {
                     'Jar': 'command-runner.jar',
                     #'Args': ['aws', 's3', 'cp', 's3://ferrarisf50/elt.py', '/home/hadoop/']
-                    'Args': ['aws', 's3', 'cp', 's3://'+bucket+'/i94', '/home/hadoop/',
+                    'Args': ['aws', 's3', 'cp', 's3://'+bucket+'/i94/scr', '/home/hadoop/',
                             '--recursive']
                 }
             },
@@ -104,6 +110,23 @@ def deploy_to_emr(bucket, emr):
 
     print ('cluster created with the step...', cluster_id['JobFlowId'])
     
+
+    
+"""
+                'EbsConfiguration': {
+                    'EbsBlockDeviceConfigs': [
+                        {
+                            'VolumeSpecification': {
+                                'VolumeType': 'gp2',
+                                #'Iops': 100,
+                                'SizeInGB': 50
+                            },
+                            'VolumesPerInstance': 1
+                        },
+                    ],
+                    'EbsOptimized': True
+                }                
+"""
     
 def main():
     config = configparser.ConfigParser()

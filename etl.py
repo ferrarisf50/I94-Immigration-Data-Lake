@@ -10,6 +10,7 @@ import re
 from functools import reduce
 from pyspark.sql import DataFrame
 import glob
+#import boto3
 
 def create_spark_session():
     """
@@ -40,13 +41,13 @@ def create_spark_session():
 
 
 
-def process_i94_data(spark, filepath, outpath):
+def process_i94_data(spark, filelist, outpath):
     """
     Process the i94 immigration dataset, load into Spark, transform the data, run quality check, then write to parquet file.
     
     INPUT: 
     spark - Spark session
-    filepath - the directory where the file locate 
+    filelist - A file list that needs to read in. 
     outpath - the directory where the output parquet file locate
     
     OUTPUT:
@@ -59,19 +60,20 @@ def process_i94_data(spark, filepath, outpath):
    
     print("Reading i94 immigration data...")
     
-    all_files = glob.glob(filepath + "/*.sas7bdat")
 
     li = []
-
-    for filename in all_files:
-        df = spark.read.format('com.github.saurfang.sas.spark').load(filename)
+    
+    for file in filelist:
+        #print(filename)
+        df = spark.read.format('com.github.saurfang.sas.spark').load(file)
         if len(df.columns) == 34:
             i94_jun = reduce(DataFrame.drop,['validres','delete_days','delete_mexl','delete_dup','delete_visa','delete_recdup'], df)    
             li.append(i94_jun)
         else:
         #print(df.printSchema())
             li.append(df)
-            
+        #print(len(li))
+        
     i94 = reduce(DataFrame.unionAll, li)
     
     #i94 = spark.read.format('com.github.saurfang.sas.spark').load(filepath+filename)
@@ -111,7 +113,7 @@ def process_i94_data(spark, filepath, outpath):
       from i94_view
       
     """    
-      #+"TABLESAMPLE (.001 PERCENT)"
+      #+"TABLESAMPLE (.0001 PERCENT)"
     )  
      
         
@@ -155,7 +157,6 @@ def process_dimension_data(spark, filepath, outpath):
     INPUT: 
     spark - Spark session
     filepath - the directory where the file locate 
-    filename - the source file name
     outpath - the directory where the output parquet file locate
     
     OUTPUT:
@@ -294,17 +295,22 @@ def main():
     config = configparser.ConfigParser()
     
     
-    '''
+ 
     
-  
+    '''
+    ##### for local test ########################
     config.read(r'dl.cfg')
     
     dim_filepath = "./"
-    i94_filepath = "../../data/18-83510-I94-Data-2016/"
+    i94_file_list = glob.glob("../../data/18-83510-I94-Data-2016/*.sas7bdat")
+    
     #i94_filename ="i94_apr16_sub.sas7bdat"
     
     outpath = "data/"
-       '''
+    ############################################
+    '''
+    
+    ##### for s3 ################################
     
     config.read(r'/home/hadoop/dl.cfg')
     
@@ -312,21 +318,46 @@ def main():
     os.environ['AWS_SECRET_ACCESS_KEY']= config.get('AWS','AWS_SECRET_ACCESS_KEY')
     bucket = config.get('S3','bucket') 
        
+        
+    # Create a list of all i94 datasets
+    """
+    s3 = boto3.client('s3',
+                  region_name = 'us-east-1',
+                 aws_access_key_id = config.get('AWS','AWS_ACCESS_KEY_ID'),
+                 aws_secret_access_key = config.get('AWS','AWS_SECRET_ACCESS_KEY'))
+    
+    objs = s3.list_objects_v2(Bucket=bucket)['Contents']
+    i94_file_list=[]      
+    for obj in objs:
+        if '.sas7bdat' in  obj['Key'] and obj['Key'].startswith('i94/data/i94_'):
+            li.append(obj['Key'])
+    print(i94_file_list)  
+    """
+    
+    
+    
+    i94_file_list = ['i94/data/i94_apr16_sub.sas7bdat', 'i94/data/i94_aug16_sub.sas7bdat', 'i94/data/i94_dec16_sub.sas7bdat', 'i94/data/i94_feb16_sub.sas7bdat', 'i94/data/i94_jan16_sub.sas7bdat', 'i94/data/i94_jul16_sub.sas7bdat', 'i94/data/i94_jun16_sub.sas7bdat', 'i94/data/i94_mar16_sub.sas7bdat', 'i94/data/i94_may16_sub.sas7bdat', 'i94/data/i94_nov16_sub.sas7bdat', 'i94/data/i94_oct16_sub.sas7bdat', 'i94/data/i94_sep16_sub.sas7bdat']
+    
+    i94_file_list = ["s3a://"+bucket+"/"+i for i in i94_file_list]
     
     dim_filepath = "s3a://"+bucket+"/i94/data/"
-    i94_filepath = "s3a://"+bucket+"/i94/data/"
+    
+    
+    
+    
     #i94_filename ="i94_apr16_sub.sas7bdat"
     
     outpath = "s3a://"+bucket+"/i94/parquets/"
     
+    ############################################
     
     spark = create_spark_session()
     
 
-    process_i94_data(spark, i94_filepath, outpath)
+    process_i94_data(spark, i94_file_list, outpath)
 
 
-    #process_dimension_data(spark, dim_filepath, outpath)
+    process_dimension_data(spark, dim_filepath, outpath)
       
     print("All set!")
 
